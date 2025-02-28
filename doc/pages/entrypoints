@@ -1,0 +1,2 @@
+if we dont specify entrypoints for a router.
+then it will accept requests from all available entrypoints

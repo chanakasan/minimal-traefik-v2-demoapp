@@ -1,0 +1,58 @@
+name: wildflower
+
+services:
+  traf:
+    container_name: trafctr
+    image: "traefik:v2.9"
+    labels:
+      - "traefik.enable=true"
+    command:
+      #! docker provider config
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      #! logging config
+      - "--log.level=DEBUG"
+      - "--log.filePath=/logs/traefik.log"
+      - "--log.format=json"
+      #! api service config
+      - --api.dashboard=true
+      - --api.insecure=true
+      #! entripoints
+      - "--entryPoints.entry_80.address=:80"
+      - "--entryPoints.entry_443.address=:443"
+      - "--entryPoints.entry_8000.address=:8000"
+      - "--entryPoints.entry_8443.address=:8443"
+      #! cert resolver
+      - "--certificatesresolvers.resolv_1.acme.email=chanakasan@gmail.com"
+      - "--certificatesresolvers.resolv_1.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.resolv_1.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      #! cert challenge http
+      - "--certificatesresolvers.resolv_1.acme.httpchallenge=true"
+      - "--certificatesresolvers.resolv_1.acme.httpchallenge.entrypoint=entry_80"
+      #! cert challenge dns
+      # - "--certificatesresolvers.resolv_1.acme.dnschallenge=true"
+      # - "--certificatesresolvers.resolv_1.acme.dnschallenge.provider=netlify"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8000:8000"
+      - "8443:8443"
+      - "5000:5000" # doesn't have a entrypoint, so useless
+      - "8080:8080"
+    volumes:
+      - "./logs:/logs"
+      - "./certs:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  app:
+    image: "traefik/whoami"
+    container_name: appctr
+    command:
+      - "--port=8000"
+      - "--verbose"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.service_1.loadbalancer.server.port=8000"
+      - "traefik.http.routers.rou_1.rule=Host(`app.localhost`) && Path(`/whoami`)"
+      - "traefik.http.routers.rou_1.entrypoints=entry_443"
+      - "traefik.http.routers.rou_1.tls.certresolver=resolv_1"

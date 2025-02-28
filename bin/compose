@@ -1,0 +1,12 @@
+set -e
+
+if [[ reset == $1 ]]; then
+  docker compose down
+  echo "wait for 2 seconds"
+  sleep 2
+  docker compose up -d
+elif [[ up == $1 ]]; then
+  docker compose up -d
+else
+  docker compose "$@"
+fi

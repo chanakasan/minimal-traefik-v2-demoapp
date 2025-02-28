@@ -1,0 +1,10 @@
+* traefik container doesn't accept requests from all exposed ports
+instead it accepts requests from all entrypoints,
+as the name suggest
+
+* if expose 5000:5000 but don't create an entrypoint
+visiting port 5000 won't reach traefik container
+Even though the port is exposed in the container, there's no server listening on that port
+
+* 404 is displayed for any request at available entrypoints
+ that doesn't have a matching router rule
